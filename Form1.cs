@@ -5,6 +5,7 @@ namespace SystemCodingExam
 {
     public partial class Form1 : Form
     {
+        private string[] args = null;
         private string outputDirectory = string.Empty;
         private string logFilePath = "LogFile.txt";
         private int countOfFiles = 0;
@@ -16,8 +17,38 @@ namespace SystemCodingExam
         {
             if (!File.Exists(logFilePath)) File.Create(logFilePath);
             InitializeComponent();
-            progressBar1.Minimum = 0;
-            progressBar1.Value = 0;
+        }
+        public Form1(string[] args)
+        {
+            this.args = args;
+            if (!File.Exists(logFilePath)) File.Create(logFilePath);
+            InitializeComponent();
+            Text = args.Length.ToString();
+        }
+        private async Task GetDataFromFileAsync(string filePath)
+        {
+            await Task.Run(() =>
+            {
+                using (FileStream fs = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+                {
+                    using (StreamReader sr = new StreamReader(fs))
+                    {
+                        string line = string.Empty;
+                        while ((line = sr.ReadLine()) != null)
+                        {
+                            secretWords.Add(line);
+                            textBox2.Text += line + "\n";
+                        }
+                    }
+                }
+            });
+        }
+        private async void GetWordsFromFile(object sender, EventArgs e)
+        {
+            OpenFileDialog ofd = new OpenFileDialog();
+            ofd.ShowDialog();
+            string filePath = ofd.FileName;
+            GetDataFromFileAsync(filePath);
         }
         private async Task AwaitAllTasks(Task[] tasks)
         {
@@ -43,6 +74,7 @@ namespace SystemCodingExam
             countOfFiles = 0;
             outputDirectory = @textBox1.Text;
             button1.Enabled = false;
+
             cts = new CancellationTokenSource();
 
             try
@@ -78,7 +110,6 @@ namespace SystemCodingExam
             finally
             {
                 button1.Enabled = true;
-                progressBar1.Value = 0;
             }
         }
         private void RecurseDirectory(string path)
@@ -92,7 +123,6 @@ namespace SystemCodingExam
                         processForm.Close();
                         return;
                     }
-
                     ProcessFile(file);
                     processForm.max += 1;
                     processForm.SetMaximum();

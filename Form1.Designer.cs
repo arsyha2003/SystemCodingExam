@@ -28,26 +28,20 @@
         /// </summary>
         private void InitializeComponent()
         {
-            progressBar1 = new ProgressBar();
             button1 = new Button();
             textBox1 = new TextBox();
             label1 = new Label();
             textBox2 = new TextBox();
             label2 = new Label();
+            button2 = new Button();
+            label3 = new Label();
             SuspendLayout();
-            // 
-            // progressBar1
-            // 
-            progressBar1.Location = new Point(12, 21);
-            progressBar1.Name = "progressBar1";
-            progressBar1.Size = new Size(555, 29);
-            progressBar1.TabIndex = 0;
             // 
             // button1
             // 
-            button1.Location = new Point(659, 21);
+            button1.Location = new Point(335, 244);
             button1.Name = "button1";
-            button1.Size = new Size(215, 119);
+            button1.Size = new Size(288, 183);
             button1.TabIndex = 1;
             button1.Text = "Старт";
             button1.UseVisualStyleBackColor = true;
@@ -55,7 +49,7 @@
             // 
             // textBox1
             // 
-            textBox1.Location = new Point(12, 86);
+            textBox1.Location = new Point(12, 44);
             textBox1.Name = "textBox1";
             textBox1.Size = new Size(409, 27);
             textBox1.TabIndex = 2;
@@ -63,7 +57,7 @@
             // label1
             // 
             label1.AutoSize = true;
-            label1.Location = new Point(12, 63);
+            label1.Location = new Point(12, 21);
             label1.Name = "label1";
             label1.Size = new Size(411, 20);
             label1.TabIndex = 3;
@@ -71,32 +65,52 @@
             // 
             // textBox2
             // 
-            textBox2.Location = new Point(14, 179);
+            textBox2.Location = new Point(14, 124);
             textBox2.Multiline = true;
             textBox2.Name = "textBox2";
-            textBox2.Size = new Size(409, 241);
+            textBox2.Size = new Size(315, 296);
             textBox2.TabIndex = 4;
             // 
             // label2
             // 
             label2.AutoSize = true;
-            label2.Location = new Point(14, 156);
+            label2.Location = new Point(12, 101);
             label2.Name = "label2";
             label2.Size = new Size(265, 20);
             label2.TabIndex = 5;
             label2.Text = "Введите слова-фильтр через пробел";
+            // 
+            // button2
+            // 
+            button2.Location = new Point(335, 124);
+            button2.Name = "button2";
+            button2.Size = new Size(288, 64);
+            button2.TabIndex = 6;
+            button2.Text = "Взять слова из файла";
+            button2.UseVisualStyleBackColor = true;
+            button2.Click += GetWordsFromFile;
+            // 
+            // label3
+            // 
+            label3.AutoSize = true;
+            label3.Location = new Point(335, 191);
+            label3.Name = "label3";
+            label3.Size = new Size(302, 20);
+            label3.TabIndex = 7;
+            label3.Text = "*слова должны быть записаны в столбик*";
             // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(886, 450);
+            Controls.Add(label3);
+            Controls.Add(button2);
             Controls.Add(label2);
             Controls.Add(textBox2);
             Controls.Add(label1);
             Controls.Add(textBox1);
             Controls.Add(button1);
-            Controls.Add(progressBar1);
             Name = "Form1";
             Text = "Form1";
             ResumeLayout(false);
@@ -104,12 +118,12 @@
         }
 
         #endregion
-
-        private ProgressBar progressBar1;
         private Button button1;
         private TextBox textBox1;
         private Label label1;
         private TextBox textBox2;
         private Label label2;
+        private Button button2;
+        private Label label3;
     }
 }

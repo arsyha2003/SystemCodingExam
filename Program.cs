@@ -2,16 +2,36 @@ namespace SystemCodingExam
 {
     internal static class Program
     {
-        /// <summary>
-        ///  The main entry point for the application.
-        /// </summary>
+        static List<string> secretWords = new List<string>();
+        static List<string> logFileData = new List<string>();
+        static Mutex mutex;
         [STAThread]
-        static void Main()
+        static void Main(string[]args)
         {
-            // To customize application configuration such as set high DPI settings or default font,
-            // see https://aka.ms/applicationconfiguration.
-            ApplicationConfiguration.Initialize();
-            Application.Run(new Form1());
+            bool isNewApp = true;
+            mutex = new Mutex(true, "individualMutex",out isNewApp);
+            if(!isNewApp)
+            {
+                MessageBox.Show("Приложение уже запущено!!!");
+                return;
+            }
+            ApplicationConfiguration.Initialize();            
+            try
+            {
+                if(args.ToList().Count!=0)
+                {
+                    Application.Run(new Form1(args));
+                }
+                else
+                {
+                    Application.Run(new Form1());
+                }
+
+            }
+            finally
+            {
+                mutex.ReleaseMutex();
+            }
         }
     }
 }
