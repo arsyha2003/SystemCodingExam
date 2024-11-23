@@ -5,26 +5,26 @@ namespace SystemCodingExam
 {
     public partial class Form1 : Form
     {
-        private DateTime timeOfStart;
-        private int countOfFiles = 0;
+        public DateTime timeOfStart;
+        public int countOfFiles = 0;
 
-        private bool isConsole = false;
-        private bool isFileOpened = false;
-        private bool isPaused = false;
+        public bool isConsole = false;
+        public bool isFileOpened = false;
+        public bool isPaused = false;
 
-        private string[] args = null;
-        private string consoleFilePath = string.Empty;
-        private string outputDirectory = string.Empty;
-        private string logFilePath = "LogFile.txt";
+        public string[] args = null;
+        public string consoleFilePath = string.Empty;
+        public string outputDirectory = string.Empty;
+        public string logFilePath = "LogFile.txt";
 
-        private List<string> secretWords = new List<string>();
-        private List<string> logFileData = new List<string>();
-        private Dictionary<string, int> countOfWords = new Dictionary<string, int>();
+        public List<string> secretWords = new List<string>();
+        public List<string> logFileData = new List<string>();
+        public Dictionary<string, int> countOfWords = new Dictionary<string, int>();
 
-        private ProcessForm processForm;
+        public ProcessForm processForm;
 
-        private CancellationTokenSource cts;
-        private ManualResetEvent manualResetEvent = new ManualResetEvent(true);
+        public CancellationTokenSource cts;
+        public ManualResetEvent manualResetEvent = new ManualResetEvent(true);
         public Form1()
         {
             InitializeComponent();
@@ -32,37 +32,17 @@ namespace SystemCodingExam
         }
         public Form1(string[] args)
         {
-            InitializeComponent();
             isConsole = true;
             this.args = args;
             outputDirectory = args[0].Trim('"');
             Text = isConsole.ToString();
             textBox1.Text = outputDirectory;
         }
-        private void Form1_Load(object sender, EventArgs e)
+        public void Form1_Load(object sender, EventArgs e)
         {
             if (!File.Exists(logFilePath)) File.Create(logFilePath);
-            if (isConsole)
-            {
-                if (args[1].Trim('"').Contains(".txt"))
-                {
-                    GetDataFromFileAsync(args[1].Trim('"'));
-                }
-                else
-                {
-                    foreach (string word in args[1].Trim('"').Split())
-                    {
-                        textBox2.Text += word + " ";
-                    }
-                }
-                foreach(var i in secretWords)
-                {
-                    countOfWords.Add(i, 0);
-                }
-                StartProgramAsync();
-            }
         }
-        private async Task GetDataFromFileAsync(string filePath)
+        public async Task GetDataFromFileAsync(string filePath)
         {
             await Task.Run(() =>
             {
@@ -87,14 +67,17 @@ namespace SystemCodingExam
             string filePath = ofd.FileName;
             GetDataFromFileAsync(filePath);
         }
-        private async Task AwaitAllTasksAsync(Task[] tasks)
+        public async Task AwaitAllTasksAsync(Task[] tasks)
         {
             await Task.Run(() =>
             {
                 Task.WaitAll(tasks);
-                MessageBox.Show($"Обработка завершена!\n" +
+                if(!isConsole)
+                {
+                    MessageBox.Show($"Обработка завершена!\n" +
                     $"Время обработки: {(DateTime.Now - timeOfStart).Hours}:{(DateTime.Now - timeOfStart).Minutes}:{(DateTime.Now - timeOfStart).Seconds}\n" +
                     $"Обработано файлов: {countOfFiles}", string.Empty, MessageBoxButtons.OK);
+                }
                 string topOfWords = string.Empty;
                 foreach(var item in countOfWords.OrderBy(x=>x.Value))
                 {
@@ -113,15 +96,17 @@ namespace SystemCodingExam
                 }
             });
         }
-        private async void StartProgramAsync()
+        public async void StartProgramAsync()
         {
             timeOfStart = DateTime.Now; 
             countOfFiles = 0;
             cts = new CancellationTokenSource();
             button1.Enabled = false;
-
-            secretWords = textBox2.Text.Split().ToList();
-            outputDirectory = @textBox1.Text;
+            if (!isConsole)
+            {
+                secretWords = textBox2.Text.Split().ToList();
+                outputDirectory = @textBox1.Text;
+            }
             try
             {
                 if (!Directory.Exists(outputDirectory))
@@ -134,11 +119,13 @@ namespace SystemCodingExam
                     MessageBox.Show("Директории которую вы ввели не существует, программа создала ее автоматически.", string.Empty, MessageBoxButtons.OK);
                 }
                 var drives = DriveInfo.GetDrives().ToList();
-
                 processForm = new ProcessForm(cts);
                 processForm.max = drives.Count();
                 processForm.SetMaximum();
-                processForm.Show();
+                if (!isConsole)
+                {
+                    processForm.Show();
+                }
 
                 List<Task> tasks = new List<Task>();
                 foreach (var drive in drives)
@@ -149,16 +136,16 @@ namespace SystemCodingExam
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Обработка была прервана!", string.Empty, MessageBoxButtons.OK);
+                if(!isConsole) MessageBox.Show("Обработка была прервана!", string.Empty, MessageBoxButtons.OK);
                 Log($"Ошибка: {ex.Message} {DateTime.Now}");
             }
             finally
             {
-                button1.Enabled = true;
+                if(!isConsole) button1.Enabled = true;
             }
         }
         private async void StartButtonEvent(object sender, EventArgs e) => StartProgramAsync();
-        private void RecursiveDirectorySearch(string path)
+        public void RecursiveDirectorySearch(string path)
         {
             try
             {
@@ -200,7 +187,7 @@ namespace SystemCodingExam
                 Log($"Ошибка: {ex.Message} {DateTime.Now}");
             }
         }
-        private void ProcessingTxtFile(string filePath)
+        public void ProcessingTxtFile(string filePath)
         {
             try
             {
@@ -222,9 +209,7 @@ namespace SystemCodingExam
                     }
                     string newFilePath = Path.Combine(outputDirectory, Path.GetFileName(filePath));
                     File.WriteAllText(newFilePath, filteredContent);
-
                     Log($"Обработан файл: {filePath}  размер: {new FileInfo(filePath).Length} {DateTime.Now}");
-                    Text = $"Обработан файл: {filePath} {DateTime.Now}";
                 }
             }
             catch (Exception ex)
@@ -232,7 +217,7 @@ namespace SystemCodingExam
                 Log($"Ошибка при обработке файла {filePath}: {ex.Message} {DateTime.Now}");
             }
         }
-        private void Log(string message)
+        public void Log(string message)
         {
             logFileData.Add(message);
         }

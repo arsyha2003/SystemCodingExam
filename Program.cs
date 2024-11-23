@@ -9,8 +9,9 @@ namespace SystemCodingExam
     {
         static Mutex mutex;
         [STAThread]
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
+            Form1 form = new Form1();
             bool isNewApp = true;
             mutex = new Mutex(true, "individualMutex", out isNewApp);
             if (!isNewApp)
@@ -23,7 +24,23 @@ namespace SystemCodingExam
             {
                 if (args.ToList().Count != 0)
                 {
-                    Application.Run(new Form1(args));
+                    form.outputDirectory = args.ToList()[0];
+                    if (args[1].Trim('"').Contains(".txt"))
+                    {
+                        form.GetDataFromFileAsync(args[1].Trim('"'));
+                    }
+                    else
+                    {
+                        foreach (string word in args[1].Trim('"').Split())
+                        {
+                            form.secretWords.Add(word + " ");
+                        }
+                    }
+                    foreach (var i in form.secretWords)
+                    {
+                        form.countOfWords.Add(i, 0);
+                    }
+                    form.StartProgramAsync();
                 }
                 else
                 {

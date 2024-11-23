@@ -18,7 +18,7 @@ namespace SystemCodingExam
         CancellationTokenSource cts = new CancellationTokenSource();
         public ProcessForm(CancellationTokenSource cts)
         {
-            InitializeComponent();
+            InitializeComponent(); 
             this.cts = cts;
         }
         public void SetMaximum()
