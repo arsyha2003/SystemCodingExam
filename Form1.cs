@@ -5,25 +5,54 @@ namespace SystemCodingExam
 {
     public partial class Form1 : Form
     {
+        private bool isConsole = false;
+        private bool isFileOpened = false;
+        private bool isPaused = false;
+
         private string[] args = null;
+        private string consoleFilePath = string.Empty;
         private string outputDirectory = string.Empty;
         private string logFilePath = "LogFile.txt";
-        private int countOfFiles = 0;
+
         private List<string> secretWords = new List<string>();
         private List<string> logFileData = new List<string>();
+
         private ProcessForm processForm;
+
         private CancellationTokenSource cts;
+        private ManualResetEvent manualResetEvent = new ManualResetEvent(true);
         public Form1()
         {
-            if (!File.Exists(logFilePath)) File.Create(logFilePath);
             InitializeComponent();
+            isConsole = false;
         }
         public Form1(string[] args)
         {
-            this.args = args;
-            if (!File.Exists(logFilePath)) File.Create(logFilePath);
             InitializeComponent();
-            Text = args.Length.ToString();
+            isConsole = true;
+            this.args = args;
+            outputDirectory = args[0].Trim('"');
+            Text = isConsole.ToString();
+            textBox1.Text = outputDirectory;
+        }
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            if (!File.Exists(logFilePath)) File.Create(logFilePath);
+            if (isConsole)
+            {
+                if (args[1].Trim('"').Contains(".txt"))
+                {
+                    GetDataFromFileAsync(args[1].Trim('"'));
+                }
+                else
+                {
+                    foreach (string word in args[1].Trim('"').Split())
+                    {
+                        textBox2.Text += word + " ";
+                    }
+                }
+                StartProgramAsync();
+            }
         }
         private async Task GetDataFromFileAsync(string filePath)
         {
@@ -37,20 +66,20 @@ namespace SystemCodingExam
                         while ((line = sr.ReadLine()) != null)
                         {
                             secretWords.Add(line);
-                            textBox2.Text += line + "\n";
+                            textBox2.Text += line + " ";
                         }
                     }
                 }
             });
         }
-        private async void GetWordsFromFile(object sender, EventArgs e)
+        private async void GetWordsFromFileButtonEvent(object sender, EventArgs e)
         {
             OpenFileDialog ofd = new OpenFileDialog();
             ofd.ShowDialog();
             string filePath = ofd.FileName;
             GetDataFromFileAsync(filePath);
         }
-        private async Task AwaitAllTasks(Task[] tasks)
+        private async Task AwaitAllTasksAsync(Task[] tasks)
         {
             await Task.Run(() =>
             {
@@ -68,25 +97,23 @@ namespace SystemCodingExam
                 }
             });
         }
-        private async void StartButtonEvent(object sender, EventArgs e)
+        private async void StartProgramAsync()
         {
-            secretWords = textBox2.Text.Split().ToList();
-            countOfFiles = 0;
-            outputDirectory = @textBox1.Text;
+            cts = new CancellationTokenSource();
             button1.Enabled = false;
 
-            cts = new CancellationTokenSource();
-
+            secretWords = textBox2.Text.Split().ToList();
+            outputDirectory = @textBox1.Text;
             try
             {
-                if(!Directory.Exists(outputDirectory))
+                if (!Directory.Exists(outputDirectory))
                 {
                     try
                     {
                         Directory.CreateDirectory(outputDirectory);
                     }
                     catch { MessageBox.Show("Путь указан некорректно."); return; }
-                    MessageBox.Show("Директории которую вы ввели не существует, программа создала ее автоматически.",string.Empty, MessageBoxButtons.OK);
+                    MessageBox.Show("Директории которую вы ввели не существует, программа создала ее автоматически.", string.Empty, MessageBoxButtons.OK);
                 }
                 var drives = DriveInfo.GetDrives().ToList();
 
@@ -96,15 +123,15 @@ namespace SystemCodingExam
                 processForm.Show();
 
                 List<Task> tasks = new List<Task>();
-                foreach(var drive in drives)
+                foreach (var drive in drives)
                 {
-                    tasks.Add(Task.Run(() => RecurseDirectory(drive.Name)));
+                    tasks.Add(Task.Run(() => RecursiveDirectorySearch(drive.Name)));
                 }
-                await AwaitAllTasks(tasks.ToArray());
+                await AwaitAllTasksAsync(tasks.ToArray());
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Обработка была прервана! "+ex.Message, string.Empty, MessageBoxButtons.OK);
+                MessageBox.Show("Обработка была прервана!", string.Empty, MessageBoxButtons.OK);
                 Log($"Ошибка: {ex.Message} {DateTime.Now}");
             }
             finally
@@ -112,7 +139,8 @@ namespace SystemCodingExam
                 button1.Enabled = true;
             }
         }
-        private void RecurseDirectory(string path)
+        private async void StartButtonEvent(object sender, EventArgs e) => StartProgramAsync();
+        private void RecursiveDirectorySearch(string path)
         {
             try
             {
@@ -123,10 +151,14 @@ namespace SystemCodingExam
                         processForm.Close();
                         return;
                     }
-                    ProcessFile(file);
+                    if(isPaused == true)
+                    {
+                        manualResetEvent.WaitOne();
+                    }
+                    ProcessingTxtFile(file);
                     processForm.max += 1;
                     processForm.SetMaximum();
-                    processForm.UpdateProgress();
+                    processForm.UpdateProgress(isPaused);
 
                 }
                 foreach (var directory in Directory.GetDirectories(path))
@@ -136,10 +168,14 @@ namespace SystemCodingExam
                         processForm.Close();
                         return;
                     }
-                    RecurseDirectory(directory);
+                    if (isPaused == true)
+                    {
+                        manualResetEvent.WaitOne();
+                    }
+                    RecursiveDirectorySearch(directory);
                     processForm.max += 1;
                     processForm.SetMaximum();
-                    processForm.UpdateProgress();
+                    processForm.UpdateProgress(isPaused);
                 }
             }
             catch (Exception ex)
@@ -147,7 +183,7 @@ namespace SystemCodingExam
                 Log($"Ошибка: {ex.Message} {DateTime.Now}");
             }
         }
-        private void ProcessFile(string filePath)
+        private void ProcessingTxtFile(string filePath)
         {
             try
             {
@@ -171,10 +207,9 @@ namespace SystemCodingExam
             }
             catch (Exception ex)
             {
-                Log($"Ошибка при обработке файла {filePath}: {ex.Message}");
+                Log($"Ошибка при обработке файла {filePath}: {ex.Message} {DateTime.Now}");
             }
         }
-
         private void Log(string message)
         {
             logFileData.Add(message);
@@ -183,7 +218,17 @@ namespace SystemCodingExam
         {
             cts.Cancel();
         }
-
+        private void Pause(object sender, EventArgs e)
+        {
+            manualResetEvent.Reset();
+            isPaused = true;
+        }
+        private void Unpause(object sender, EventArgs e)
+        {
+            manualResetEvent.Set();
+            isPaused = false;
+        }
 
     }
+   
 }

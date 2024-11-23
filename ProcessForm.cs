@@ -14,6 +14,7 @@ namespace SystemCodingExam
     public partial class ProcessForm: Form
     {
         public int max = 0;
+        public bool isPaused = false;
         CancellationTokenSource cts = new CancellationTokenSource();
         public ProcessForm(CancellationTokenSource cts)
         {
@@ -24,10 +25,18 @@ namespace SystemCodingExam
         {
             progressBar1.Maximum = max;
         }
-
-        public void UpdateProgress()
+        public void UpdateProgress(bool isPaused)
         {
             progressBar1.Value++;
+            this.isPaused = isPaused;
+            if (isPaused == true)
+            {
+                Text = "Приложение поставлено на паузу";
+            }
+            else
+            {
+                Text = string.Empty;
+            }
         }
         private void StopButtonEvent(object sender, EventArgs e)
         {
