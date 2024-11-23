@@ -5,6 +5,9 @@ namespace SystemCodingExam
 {
     public partial class Form1 : Form
     {
+        private DateTime timeOfStart;
+        private int countOfFiles = 0;
+
         private bool isConsole = false;
         private bool isFileOpened = false;
         private bool isPaused = false;
@@ -16,6 +19,7 @@ namespace SystemCodingExam
 
         private List<string> secretWords = new List<string>();
         private List<string> logFileData = new List<string>();
+        private Dictionary<string, int> countOfWords = new Dictionary<string, int>();
 
         private ProcessForm processForm;
 
@@ -51,6 +55,10 @@ namespace SystemCodingExam
                         textBox2.Text += word + " ";
                     }
                 }
+                foreach(var i in secretWords)
+                {
+                    countOfWords.Add(i, 0);
+                }
                 StartProgramAsync();
             }
         }
@@ -84,7 +92,15 @@ namespace SystemCodingExam
             await Task.Run(() =>
             {
                 Task.WaitAll(tasks);
-                MessageBox.Show("Обработка завершена!", string.Empty, MessageBoxButtons.OK);
+                MessageBox.Show($"Обработка завершена!\n" +
+                    $"Время обработки: {(DateTime.Now - timeOfStart).Hours}:{(DateTime.Now - timeOfStart).Minutes}:{(DateTime.Now - timeOfStart).Seconds}\n" +
+                    $"Обработано файлов: {countOfFiles}", string.Empty, MessageBoxButtons.OK);
+                string topOfWords = string.Empty;
+                foreach(var item in countOfWords.OrderBy(x=>x.Value))
+                {
+                    topOfWords += $"1. Слово: {item.Key} количество повторений: {item.Value}\n";
+                }
+                Log(topOfWords);
                 using (FileStream fs = new FileStream(logFilePath, FileMode.Open, FileAccess.Write))
                 {
                     using (StreamWriter sw = new StreamWriter(fs))
@@ -99,6 +115,8 @@ namespace SystemCodingExam
         }
         private async void StartProgramAsync()
         {
+            timeOfStart = DateTime.Now; 
+            countOfFiles = 0;
             cts = new CancellationTokenSource();
             button1.Enabled = false;
 
@@ -159,7 +177,6 @@ namespace SystemCodingExam
                     processForm.max += 1;
                     processForm.SetMaximum();
                     processForm.UpdateProgress(isPaused);
-
                 }
                 foreach (var directory in Directory.GetDirectories(path))
                 {
@@ -187,9 +204,9 @@ namespace SystemCodingExam
         {
             try
             {
+                countOfFiles++;
                 string content = File.ReadAllText(filePath);
                 bool isWordsFound = secretWords.Any(w => content.Contains(w));
-
                 if (isWordsFound)
                 {
                     string filteredContent = string.Empty;
@@ -197,12 +214,17 @@ namespace SystemCodingExam
                     {
                         filteredContent = secretWords.Aggregate(content, (current, word) =>
                         current.Replace(word, "*******", StringComparison.OrdinalIgnoreCase));
+                        try
+                        {
+                            countOfWords[word] += 1;
+                        }
+                        catch { }
                     }
                     string newFilePath = Path.Combine(outputDirectory, Path.GetFileName(filePath));
                     File.WriteAllText(newFilePath, filteredContent);
 
-                    Log($"Обработан файл: {filePath}  {DateTime.Now}");
-                    Text = $"Обработан файл: {filePath}  {DateTime.Now}";
+                    Log($"Обработан файл: {filePath}  размер: {new FileInfo(filePath).Length} {DateTime.Now}");
+                    Text = $"Обработан файл: {filePath} {DateTime.Now}";
                 }
             }
             catch (Exception ex)
