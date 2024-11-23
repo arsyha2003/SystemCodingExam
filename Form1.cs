@@ -54,7 +54,7 @@ namespace SystemCodingExam
                         while ((line = sr.ReadLine()) != null)
                         {
                             secretWords.Add(line);
-                            textBox2.Text += line + " ";
+                            if(isConsole==false) textBox2.Text += line + " ";
                         }
                     }
                 }
@@ -72,7 +72,7 @@ namespace SystemCodingExam
             await Task.Run(() =>
             {
                 Task.WaitAll(tasks);
-                if(!isConsole)
+                if (isConsole == false)
                 {
                     MessageBox.Show($"Обработка завершена!\n" +
                     $"Время обработки: {(DateTime.Now - timeOfStart).Hours}:{(DateTime.Now - timeOfStart).Minutes}:{(DateTime.Now - timeOfStart).Seconds}\n" +
@@ -102,7 +102,7 @@ namespace SystemCodingExam
             countOfFiles = 0;
             cts = new CancellationTokenSource();
             button1.Enabled = false;
-            if (!isConsole)
+            if (isConsole == false)
             {
                 secretWords = textBox2.Text.Split().ToList();
                 outputDirectory = @textBox1.Text;
@@ -122,7 +122,7 @@ namespace SystemCodingExam
                 processForm = new ProcessForm(cts);
                 processForm.max = drives.Count();
                 processForm.SetMaximum();
-                if (!isConsole)
+                if (isConsole == false)
                 {
                     processForm.Show();
                 }
@@ -136,12 +136,12 @@ namespace SystemCodingExam
             }
             catch (Exception ex)
             {
-                if(!isConsole) MessageBox.Show("Обработка была прервана!", string.Empty, MessageBoxButtons.OK);
+                if (isConsole == false) MessageBox.Show("Обработка была прервана!", string.Empty, MessageBoxButtons.OK);
                 Log($"Ошибка: {ex.Message} {DateTime.Now}");
             }
             finally
             {
-                if(!isConsole) button1.Enabled = true;
+                if (isConsole == false) button1.Enabled = true;
             }
         }
         private async void StartButtonEvent(object sender, EventArgs e) => StartProgramAsync();
@@ -153,7 +153,7 @@ namespace SystemCodingExam
                 {
                     if (cts.Token.IsCancellationRequested)
                     {
-                        processForm.Close();
+                        if (isConsole == false) processForm.Close();
                         return;
                     }
                     if(isPaused == true)
@@ -169,7 +169,7 @@ namespace SystemCodingExam
                 {
                     if (cts.Token.IsCancellationRequested)
                     {
-                        processForm.Close();
+                        if (isConsole == false) processForm.Close();
                         return;
                     }
                     if (isPaused == true)
